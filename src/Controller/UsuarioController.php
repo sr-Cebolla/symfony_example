@@ -62,4 +62,37 @@ class UsuarioController extends AbstractController
       'edad' => $usuario->getEdad()
     ]);  
   }
+
+  #[Route('/{id}', name: 'app_usuario_edit', methods: ['PUT'])]
+  public function update(EntityManagerInterface $entityManager, int $id, Request $request): JsonResponse
+  {
+
+    // Busca el usuario por id
+    $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+
+    // Si no lo encuentra responde con un error 404
+    if (!$usuario) {
+      return $this->json(['error'=>'No se encontro el usuario con id: '.$id], 404);
+    }
+
+    // Obtiene los valores del body de la request
+    $nombre = $request->request->get('nombre');
+    $edad = $request->request->get('edad');
+
+    // Si no envia uno responde con un error 422
+    if ($nombre == null || $edad == null){
+      return $this->json(['error'=>'Se debe enviar el nombre y edad del usuario.'], 422);
+    }
+
+    // Se actualizan los datos a la entidad
+    $usuario->setNombre($nombre);
+    $usuario->setEdad($edad);
+
+    $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'edad' => $usuario->getEdad()];
+
+    // Se aplican los cambios de la entidad en la bd
+    $entityManager->flush();
+
+    return $this->json(['message'=>'Se actualizaron los datos del usuario.', 'data' => $data]);
+  }
 }
