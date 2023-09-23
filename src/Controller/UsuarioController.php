@@ -28,4 +28,38 @@ class UsuarioController extends AbstractController
         'message' => 'Se guardo el nuevo usuario con id ' . $usuario->getId()
     ]); 
   }
+
+  #[Route('', name: 'app_usuario_read_all', methods: ['GET'])]
+  public function readAll(EntityManagerInterface $entityManager): JsonResponse
+  {
+    $usuarios = $entityManager->getRepository(Usuario::class)->findAll();
+
+    $data = [];
+  
+    foreach ($usuarios as $usuario) {
+        $data[] = [
+            'id' => $usuario->getId(),
+            'nombre' => $usuario->getNombre(),
+            'edad' => $usuario->getEdad(),
+        ];
+    }
+    
+    return $this->json($data); 
+  }
+
+  #[Route('/{id}', name: 'app_usuario_read_one', methods: ['GET'])]
+  public function readOne(EntityManagerInterface $entityManager, int $id): JsonResponse
+  {
+    $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+
+    if(!$usuario){
+      return $this->json(['error'=>'No se encontro el usuario.'], 404);
+    }
+
+    return $this->json([
+      'id' => $usuario->getId(), 
+      'nombre' => $usuario->getNombre(), 
+      'edad' => $usuario->getEdad()
+    ]);  
+  }
 }
