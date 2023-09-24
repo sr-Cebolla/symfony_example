@@ -95,4 +95,27 @@ class UsuarioController extends AbstractController
 
     return $this->json(['message'=>'Se actualizaron los datos del usuario.', 'data' => $data]);
   }
+
+  #[Route('/{id}', name: 'app_usuario_delete', methods: ['DELETE'])]
+  public function delete(EntityManagerInterface $entityManager, int $id, Request $request): JsonResponse
+  {
+
+    // Busca el usuario por id
+    $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+
+    // Si no lo encuentra responde con un error 404
+    if (!$usuario) {
+      return $this->json(['error'=>'No se encontro el usuario con id: '.$id], 404);
+    }
+
+    // Remueve la entidad
+    $entityManager->remove($usuario);
+
+    $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'edad' => $usuario->getEdad()];
+
+    // Se aplican los cambios de la entidad en la bd
+    $entityManager->flush();
+
+    return $this->json(['message'=>'Se elimino el usuario.', 'data' => $data]);
+  }
 }
