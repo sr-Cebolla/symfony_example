@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Usuario;
+use App\Service\GeneradorDeMensajes;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,7 +14,8 @@ use Symfony\Component\Routing\Annotation\Route;
 class UsuarioController extends AbstractController
 {
   #[Route('', name: 'app_usuario_create', methods: ['POST'])]
-  public function create(EntityManagerInterface $entityManager, Request $request): JsonResponse
+  public function create(EntityManagerInterface $entityManager, 
+    Request $request, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
   {
     $usuario = new Usuario();
     $usuario->setNombre($request->request->get('nombre'));
@@ -25,7 +27,7 @@ class UsuarioController extends AbstractController
     $entityManager->flush();
 
     return $this->json([
-        'message' => 'Se guardo el nuevo usuario con id ' . $usuario->getId()
+        'message' => $generadorDeMensajes->getMensaje(0) . '. Se guardo el nuevo usuario con id ' . $usuario->getId()
     ]); 
   }
 
