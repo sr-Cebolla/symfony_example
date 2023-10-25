@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Usuario;
+use App\Entity\Direccion;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,6 +17,9 @@ class UsuarioController extends AbstractController
   public function create(EntityManagerInterface $entityManager, Request $request): JsonResponse
   {
     $usuario = new Usuario();
+    if($request->request->get('edad') < 0){
+      return $this->json(['message' => 'no se puede ingresar un usuario con edad menor a 0']);
+    }
     $usuario->setNombre($request->request->get('nombre'));
     $usuario->setEdad($request->request->get('edad'));
     // Se avisa a Doctrine que queremos guardar un nuevo registro pero no se ejecutan las consultas
@@ -33,34 +37,67 @@ class UsuarioController extends AbstractController
   public function readAll(EntityManagerInterface $entityManager): JsonResponse
   {
     $usuarios = $entityManager->getRepository(Usuario::class)->findAll();
-
+    $direcciones = $entityManager->getRepository(Direccion::class)->findAll();
     $data = [];
-  
+    $dato = [];
     foreach ($usuarios as $usuario) {
         $data[] = [
             'id' => $usuario->getId(),
             'nombre' => $usuario->getNombre(),
             'edad' => $usuario->getEdad(),
-        ];
+
+        ];      
+    }
+    foreach($direcciones as $direccion){
+      $dato[]=[
+        'id' => $direccion->getId(),
+        'usuario_id' => $direccion->getUsuario()->getId(), 
+        'departamento' => $direccion->getDepartamento(),
+        'municipio' => $direccion->getMunicipio(),
+        'direccion' => $direccion->getDireccion()
+      ];
     }
     
-    return $this->json($data); 
+    return $this->json([$data,$dato]); 
   }
 
   #[Route('/{id}', name: 'app_usuario_read_one', methods: ['GET'])]
   public function readOne(EntityManagerInterface $entityManager, int $id): JsonResponse
   {
     $usuario = $entityManager->getRepository(Usuario::class)->find($id);
-
+    $direccion = $entityManager->getRepository(Direccion::class)->find($usuario->getId());
     if(!$usuario){
       return $this->json(['error'=>'No se encontro el usuario.'], 404);
     }
+   
+    $direcciones = $usuario->getDirecciones();
 
-    return $this->json([
-      'id' => $usuario->getId(), 
-      'nombre' => $usuario->getNombre(), 
-      'edad' => $usuario->getEdad()
-    ]);  
+        $direccionData = [];
+
+        foreach ($direcciones as $direccion) {
+            $direccionData[] = [
+                'id' => $direccion->getId(),
+                'departamento' => $direccion->getDepartamento(),
+                'municipio' => $direccion->getMunicipio(),
+                'direccion' => $direccion->getDireccion(),
+                'usuario_id' =>$direccion->getUsuario()->getId()
+            ];
+        }
+
+        if(!$direccionData) {
+          return $this->json([
+            'id' => $usuario->getId(),
+            'nombre' => $usuario->getNombre(),
+            'edad' => $usuario->getEdad(),
+          ]);
+        } else {
+          return $this->json([
+            'id' => $usuario->getId(),
+            'nombre' => $usuario->getNombre(),
+            'edad' => $usuario->getEdad(),
+            'direcciones' => $direccionData, 
+        ]);
+        }       
   }
 
   #[Route('/{id}', name: 'app_usuario_edit', methods: ['PUT'])]
@@ -69,7 +106,9 @@ class UsuarioController extends AbstractController
 
     // Busca el usuario por id
     $usuario = $entityManager->getRepository(Usuario::class)->find($id);
-
+    if($request->request->get('edad') < 0){
+      return $this->json(['message' => 'no se puede modificar la edad de un usuario con edad menor a 0']);
+    }
     // Si no lo encuentra responde con un error 404
     if (!$usuario) {
       return $this->json(['error'=>'No se encontro el usuario con id: '.$id], 404);
