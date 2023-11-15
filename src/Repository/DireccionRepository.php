@@ -25,7 +25,7 @@ class DireccionRepository extends ServiceEntityRepository
     public function findAllWithPagination(int $currentPage, int $limit): Paginator
     {
         // Creamos nuestra query
-        $query = $this->createQueryBuilder('u')
+        $query = $this->createQueryBuilder('p')
             ->getQuery();
 
         // Creamos un paginator con la funcion paginate
