@@ -2,9 +2,11 @@
 
 namespace App\Repository;
 
+use App\Utils\Functions;
 use App\Entity\Direccion;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @extends ServiceEntityRepository<Direccion>
@@ -20,7 +22,16 @@ class DireccionRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Direccion::class);
     }
+    public function findAllWithPagination(int $currentPage, int $limit): Paginator
+    {
+        // Creamos nuestra query
+        $query = $this->createQueryBuilder('u')
+            ->getQuery();
 
+        // Creamos un paginator con la funcion paginate
+        $paginator = Functions::paginate($query, $currentPage, $limit);
+        return $paginator;
+    }
 //    /**
 //     * @return Direccion[] Returns an array of Direccion objects
 //     */

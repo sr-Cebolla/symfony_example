@@ -17,7 +17,7 @@ class UsuarioController extends AbstractController
   public function create(EntityManagerInterface $entityManager, Request $request): JsonResponse
   {
     $usuario = new Usuario();
-    if($request->request->get('edad') < 0){
+    if ($request->request->get('edad') < 0) {
       return $this->json(['message' => 'no se puede ingresar un usuario con edad menor a 0']);
     }
     $usuario->setNombre($request->request->get('nombre'));
@@ -29,36 +29,34 @@ class UsuarioController extends AbstractController
     $entityManager->flush();
 
     return $this->json([
-        'message' => 'Se guardo el nuevo usuario con id ' . $usuario->getId()
-    ]); 
+      'message' => 'Se guardo el nuevo usuario con id ' . $usuario->getId()
+    ]);
   }
 
   #[Route('', name: 'app_usuario_read_all', methods: ['GET'])]
   public function readAll(EntityManagerInterface $entityManager): JsonResponse
-  {
+  {    
     $usuarios = $entityManager->getRepository(Usuario::class)->findAll();
     $direcciones = $entityManager->getRepository(Direccion::class)->findAll();
     $data = [];
     $dato = [];
     foreach ($usuarios as $usuario) {
-        $data[] = [
-            'id' => $usuario->getId(),
-            'nombre' => $usuario->getNombre(),
-            'edad' => $usuario->getEdad(),
-
-        ];      
+      $data[] = [
+        'id' => $usuario->getId(),
+        'nombre' => $usuario->getNombre(),
+        'edad' => $usuario->getEdad()
+      ];
     }
-    foreach($direcciones as $direccion){
-      $dato[]=[
+    foreach ($direcciones as $direccion) {
+      $dato[] = [
         'id' => $direccion->getId(),
-        'usuario_id' => $direccion->getUsuario()->getId(), 
+        'usuario_id' => $direccion->getUsuario()->getId(),
         'departamento' => $direccion->getDepartamento(),
         'municipio' => $direccion->getMunicipio(),
         'direccion' => $direccion->getDireccion()
       ];
     }
-    
-    return $this->json([$data,$dato]); 
+    return $this->json([$data, $dato]);
   }
 
   #[Route('/{id}', name: 'app_usuario_read_one', methods: ['GET'])]
@@ -66,38 +64,38 @@ class UsuarioController extends AbstractController
   {
     $usuario = $entityManager->getRepository(Usuario::class)->find($id);
     $direccion = $entityManager->getRepository(Direccion::class)->find($usuario->getId());
-    if(!$usuario){
-      return $this->json(['error'=>'No se encontro el usuario.'], 404);
+    if (!$usuario) {
+      return $this->json(['error' => 'No se encontro el usuario.'], 404);
     }
-   
+
     $direcciones = $usuario->getDirecciones();
 
-        $direccionData = [];
+    $direccionData = [];
 
-        foreach ($direcciones as $direccion) {
-            $direccionData[] = [
-                'id' => $direccion->getId(),
-                'departamento' => $direccion->getDepartamento(),
-                'municipio' => $direccion->getMunicipio(),
-                'direccion' => $direccion->getDireccion(),
-                'usuario_id' =>$direccion->getUsuario()->getId()
-            ];
-        }
+    foreach ($direcciones as $direccion) {
+      $direccionData[] = [
+        'id' => $direccion->getId(),
+        'departamento' => $direccion->getDepartamento(),
+        'municipio' => $direccion->getMunicipio(),
+        'direccion' => $direccion->getDireccion(),
+        'usuario_id' => $direccion->getUsuario()->getId()
+      ];
+    }
 
-        if(!$direccionData) {
-          return $this->json([
-            'id' => $usuario->getId(),
-            'nombre' => $usuario->getNombre(),
-            'edad' => $usuario->getEdad(),
-          ]);
-        } else {
-          return $this->json([
-            'id' => $usuario->getId(),
-            'nombre' => $usuario->getNombre(),
-            'edad' => $usuario->getEdad(),
-            'direcciones' => $direccionData, 
-        ]);
-        }       
+    if (!$direccionData) {
+      return $this->json([
+        'id' => $usuario->getId(),
+        'nombre' => $usuario->getNombre(),
+        'edad' => $usuario->getEdad(),
+      ]);
+    } else {
+      return $this->json([
+        'id' => $usuario->getId(),
+        'nombre' => $usuario->getNombre(),
+        'edad' => $usuario->getEdad(),
+        'direcciones' => $direccionData,
+      ]);
+    }
   }
 
   #[Route('/{id}', name: 'app_usuario_edit', methods: ['PUT'])]
@@ -106,12 +104,12 @@ class UsuarioController extends AbstractController
 
     // Busca el usuario por id
     $usuario = $entityManager->getRepository(Usuario::class)->find($id);
-    if($request->request->get('edad') < 0){
+    if ($request->request->get('edad') < 0) {
       return $this->json(['message' => 'no se puede modificar la edad de un usuario con edad menor a 0']);
     }
     // Si no lo encuentra responde con un error 404
     if (!$usuario) {
-      return $this->json(['error'=>'No se encontro el usuario con id: '.$id], 404);
+      return $this->json(['error' => 'No se encontro el usuario con id: ' . $id], 404);
     }
 
     // Obtiene los valores del body de la request
@@ -119,20 +117,20 @@ class UsuarioController extends AbstractController
     $edad = $request->request->get('edad');
 
     // Si no envia uno responde con un error 422
-    if ($nombre == null || $edad == null){
-      return $this->json(['error'=>'Se debe enviar el nombre y edad del usuario.'], 422);
+    if ($nombre == null || $edad == null) {
+      return $this->json(['error' => 'Se debe enviar el nombre y edad del usuario.'], 422);
     }
 
     // Se actualizan los datos a la entidad
     $usuario->setNombre($nombre);
     $usuario->setEdad($edad);
 
-    $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'edad' => $usuario->getEdad()];
+    $data = ['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'edad' => $usuario->getEdad()];
 
     // Se aplican los cambios de la entidad en la bd
     $entityManager->flush();
 
-    return $this->json(['message'=>'Se actualizaron los datos del usuario.', 'data' => $data]);
+    return $this->json(['message' => 'Se actualizaron los datos del usuario.', 'data' => $data]);
   }
 
   #[Route('/{id}', name: 'app_usuario_delete', methods: ['DELETE'])]
@@ -144,17 +142,17 @@ class UsuarioController extends AbstractController
 
     // Si no lo encuentra responde con un error 404
     if (!$usuario) {
-      return $this->json(['error'=>'No se encontro el usuario con id: '.$id], 404);
+      return $this->json(['error' => 'No se encontro el usuario con id: ' . $id], 404);
     }
 
     // Remueve la entidad
     $entityManager->remove($usuario);
 
-    $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'edad' => $usuario->getEdad()];
+    $data = ['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'edad' => $usuario->getEdad()];
 
     // Se aplican los cambios de la entidad en la bd
     $entityManager->flush();
 
-    return $this->json(['message'=>'Se elimino el usuario.', 'data' => $data]);
+    return $this->json(['message' => 'Se elimino el usuario.', 'data' => $data]);
   }
 }
